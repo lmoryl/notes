@@ -1,0 +1,32 @@
+tr domain range:
+  * reading from stdin, maps each char in domain to corresponding char in range (assuming same number of chars in each)
+  * -s: compress all repeated characters to one (so tr -s \n reduces all multi-\n's to single \n)
+  * -d: delete (e.g. tr -d \r)
+  * -c: complement (e.g. tr -cd '[:alnum:]')
+
+uniq: 
+  * Eliminates all adjacent duplicate rows from input.  Only eliminates all duplicate rows if sorted (can also be achieved by sort -u)
+
+xxd:
+  * dump to hex
+
+split infile outpref:
+  * split file into parts, default 1000 lines (orig is kept) (note cat outpref?? > filename reassembles file too)
+  * 
+
+tee:
+
+xargs cmd:
+  * Treat each whitespace-separated text block as a filename and execute cmd on said file
+  * -p: prompt for each file
+  * -I: specify a name to stand in for real file names.  e.g. ls | xargs -I f mv f ~/newdir
+    * TODO: how to do stuff like batch file name changing?
+
+cut: 
+  * Extract one or more columns from a file.  Default delimiter is \t
+  * -d: specify delimiter (in single quotes)
+  * -b, -c, -f: select only these (bytes, characters, fields) respectively
+    * N: the Nth thing
+    * N-: the Nth thing to the end of the line
+    * N-M: From the Nth to the Mth thing
+    * -M: from the 1st through the Mth thing

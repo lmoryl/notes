@@ -1,0 +1,5 @@
+Matching is greedy: [^ ]* will match nothing (first substr), then the first character if that matches,
+  then includes the second, etc., until it hits a space
+Say you want to match the second field of ...|...|...:
+  * then you need /[^|]|/2 (note the second pipe)
+

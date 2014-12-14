@@ -1,0 +1,151 @@
+Local navigation commands
+=========================
+* .gitignore: file in directory telling what files to ignore.
+  Note . is literal and * is wildcard (so *.o is all .o files)
+
+Viewing (NO CHANGES MADE):
+--------------------------
+* status: See what changes are staged, what are unstaged, and what files not in .gitignore are still untracked
+* log: See commit history
+  * -n: only go back to last n commits
+  * --oneline: each commit written on one line
+  * --stat: include file change information
+  * -p: display patch for each commit, i.e. diff each file
+  * --author=<pattern>: search for commits by author (support pattern matching)
+  * --grep=<pattern>: search for commits by pattern in commit message
+  * --decorate: add tags, branch names, etc
+  * --graph: show commits as text graph with branches etc.
+  * <filename> show log of all commits that alter <filename>
+    (note: when -p is used, diffs are shown just for that file)
+* reflog: shows history of where HEAD has been.  Useful for undoing a reset --hard.
+* add -n: dry run of git add (see what gets added)
+* clean -n: dry run of git clean (see what untracked files will be deleted)
+
+Writing
+-------
+* init: make a new repository
+  * --bare <path>: create a new public repo at <path>
+    * After creating, either:
+      * git clone, then add code, then git push, and you're off to the races
+      * git remote add, then git push
+* rm -r --cached X: stages the deletion of X (recursively through -r) from the repo.
+  Before first commit, must use this to unstage files.
+* reset X: (short for reset HEAD X) same thing, but doesn't work if HEAD doesn't exist yet (i.e. before first commit)
+  * If X is not specified, git reset makes the index look like HEAD.
+  * --hard: make the working directory look like the index look like HEAD
+  * git reset --hard <commit> moves HEAD back to <commit> and obliterates all commits after <commit>
+  * git reset <commit> is useful for undoing a bunch of commits and re-committing up to the present (which
+    is in the working directory) in a sensible, atomic fashion.
+* checkout C X: make working directory into a copy of commit C (can be commit hash or tag).
+  * If X is specified, checkout works on individual file (or directory?)
+  * If checked out a previous version of a file and wish to revert to most recent, use git checkout HEAD X
+  * -b <newbranch> <commit>: start new branch based at <commit>
+* revert X: undo all the changes introduced in commit X, appending a new commit onto HEAD reflecting
+  the previous HEAD commit with the X commit undone.  Note revert is public-repo safe, whereas reset is not
+* clean: delete all untracked files from the working directory.
+  * Note: git reset --hard <commit> followed by git clean makes WD look just like old commit
+  * -n: as with add -n, this is a "dry run" of clean
+  * -f: force--remove untracked files from directory
+  * -d: remove directories as well
+  * -x: remove things in .gitignore as well
+* commit --amend: rewrite most recent commit.
+  * if the index is empty, allows you to rewrite commit message
+  * if index is not empty, you rewrite whatever is in index, along with message
+* rebase <commit>: move a branch to have <commit> as its parent
+  * See https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase examples section
+  * -i: interactive rebasing.
+  * git checkout <branch>; git rebase master (branch now branches out of whatever commit master points to)
+  * GOLDEN RULE:  NEVER REBASE A PUBLIC BRANCH
+* branch:
+  -d: delete branch
+
+Working with repos
+==================
+Commands
+--------
+* remote: list connections in your project to other remote repositories
+  * -v: include URLs
+  * add <name> <url>: add new named connection
+  * rm <name>: remove named connection
+  * rename <oldname> <newname>: rename named connection
+* fetch <remote>: imports remote branches into local repo
+  * remote branches are essentially read-only (if you checkout one, you are in detached HEAD state)
+  * <branch>: fetch the specified branch
+  * For example, you may git fetch origin master; git log --oneline master...origin/master; git checkout master; git rebase -i origin/master
+* pull <remote>: with HEAD at <branch>, essentially does git fetch <remote> <branch>; git merge <remove>/<branch>
+  * --rebase: if <branch> and <remote>/<branch> have diverged, creates linear commit history where <origin>/<branch>
+    is followed by <branch> commits.
+    * git config --global branch.autosetuprebase always: makes --rebase the default pull option
+* push <remote> <branch>: send <branch> to <remote>, to be integrated as part of its local repo.
+  * Must generally result in a fast-forward merge (i.e. no merge conflicts)
+  * --force: make remote branch identical to your local one.
+    * Really only used for super-quick fix of recently-pushed commits.
+    * Make sure nobody has pulled new push, or there will be history conflicts.
+  * --all: push all branches
+  * --tags: send local tags to remote repo
+
+Workflows
+---------
+* Centralized
+  * One public repository that everybody clones
+  * No branching--all work is on master
+  * Commits made locally, then pushed up to the repo
+  * Conflicts are handled by pull --rebase
+* Feature Branch
+  * One public repository that everybody clones
+  * master is the official, published version of the project
+  * branches are used for specific feature development
+  * When a 
+* Gitflow
+  * Master branch
+    * Only commits of official releases (every one tagged)
+  * Develop branch
+    * Branched from first master commit
+    * "Feature branch" workflow with this as main branch
+  * Release branch
+    * Branched from develop branch at some point
+    * Active development is stopped--just bugfixing, documenting, prep for release
+    * Merged into master as next commit when ready
+  * Hotfix (maintenance) branch
+    * Branched from master
+    * Merged into both master and develop when ready
+* Forking
+  * Everybody has a public repo
+  * Fork the official repo into personal public repo
+  * Clone from personal public repo
+  * Push to personal public repo
+  * Submit pull request to get feature merged into project
+  * Only project maintainer can push to official repo
+  * Ideal for large & open sourced projects
+  * Convention is to call personal repo "origin" and official/global repo "upstream"
+
+Notes
+-----
+* Can always try a git push, but if it fails, use git pull --rebase <remote> to get things shipshape locally
+* If you want to rewrite your own commit history before pushing, you can either git reset <commit>, re-commit WD,
+  then pull --rebase then push, or you can git fetch origin master; git rebase -i origin/master; git push origin master
+* Pull requests: asks a project maintainer or developer to pull a branch from your repo into theirs
+
+
+misc notes
+==========
+* "~" is used to denote ancestors of a commit.
+  So HEAD~2 is HEAD's grandparent, and 3157e~1 is that commit's parent
+* "^" is used to reference multiple parents.  So master^2 is master's second parent
+  (this happens in the case of master coming from a merge)
+* Detached HEAD: refers to a state where HEAD points to a non-leaf commit, so that
+  (even if that commit is initially tagged) subsequent commits create an untagged branch.
+  If one moves away from that commit without naming it as a tag or branch, it will eventually
+  be deleted by the git gc.
+  This can be fixed by git checkout -b <branchname>, which attaches HEAD to the new branch, or
+  git branch <branchname>, which leaves HEAD detached, or git tag <tagname>, which again leaves HEAD detached.
+* -- is a bash built-in command indicating the end of command options.  So git checkout -- hello.c
+  checks out the most recent hello.c file from the tree, even if there is a hello.c branch
+* DO NOT DELETE HISTORY IN PUBLIC REPOS:
+  * NO git commit --amend
+  * NO git reset <commit>
+  * NO rebase
+* rebase use case:
+  On master.  Start newbranch, keep private.  Immediate hotfix needed.
+  Start hotfix branch, then do fast-forward merge (git checkoout master; git merge hotfix; git branch -d hotfix)
+  Then push to origin, then git checkout newbranch, then git rebase master

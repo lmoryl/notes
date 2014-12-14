@@ -1,0 +1,4 @@
+
+- indicates end of options, and also anything piped in from standard input
+  * e.g. cat -b - f2 < f1 #cats f1 then f2
+

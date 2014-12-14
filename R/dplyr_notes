@@ -1,0 +1,93 @@
+Piping
+======
+Operations are combined via piping (the %>% operator)
+
+Convenience
+===========
+* tbl_df(data.frame) makes data.frame nicely printable
+  * To see all columns, use head(data.frame(tbl_df))
+* data_frame(var1=...) data.frame that
+  * takes all input as-is (no strings to factors)
+  * allows for weird column names (spaces, etc.)
+  * evaluates lazily and in-order (so you can use data_frame(x=1:5, y=x^2))
+  * only recycles vectors of length 1
+* QUOTING ("Standard Evaluation"):
+  * to pass an argument to a dplyr function, one must make two changes:
+    * quote the argument by using ~arg
+    * end the function name with an underscore (_)
+  * So:
+    airport <- "ANC"
+    flights %>% filter(dest == airport)
+     # becomes...
+    crit <- ~dest == airport
+    flights %>% filter_(crit)
+
+Database Connection
+===================
+See "connnecting to databases".  Looks interesting
+
+Operations
+==========
+* filter: self-explanatory.
+  * iris %>% filter(Species=='setosa')
+* select: discard all but the named columns
+  * Can specify indices or column names (and use colons for contiguous selection in either case!!)
+  * String matching:
+    * contains, starts_with, ends_with, matches
+  * can rename columns when selecting them
+  * iris %>% select(contains("Sepal"))
+* rename: rename a column.
+  * e.g. flights <- flights %>% rename(Date=DayofMonth) # rename DayofMonth to Date
+* arrange: order rows according to a column
+  * use arrange(desc(var)) for descending order
+  * flights %>% arrange(DepDelay)
+* group_by: specify grouping for future manipulations (e.g. summarise)
+  * group_by(var1, ...)
+  * flights %>% group_by(Dest) %>% select(Cancelled) %>% table()
+* distinct(): return distinct rows of table
+* slice: select rows by position; slice(idx) analagous to tbl[idx,]
+* sample_n(N): sample N rows from data frame
+* sample_frac(P): sample portion of rows
+  * in both cases, replace=T makes it with replacement
+* glimpse: like str()
+
+Mutate Family
+-------------
+* mutate: create new columns from existing ones
+  * e.g. flights <- flights %>% mutate(Speed = Distance / (AirTime * 60))
+* transmute: do the same thing, but dropping ALL columns except new ones
+mutate_each: create new columns from each of multiple columns
+  * .: data of all rows, for creating custom functions
+  * iris %>% mutate_each(funs(half= . / 2, min_rank), Sepal.Length, Petal.Width)
+
+Summarise Family
+----------------
+* summarise: apply functions to groups of rows to summarise data in those rows
+  * iris %>% group_by(Species) %>% summarise(avgSL = mean(Sepal.Length, na.rm=TRUE))
+* summarise_each: apply same function (or functions) to multiple columns
+  * iris %>% group_by(Species) %>% summarise_each(funs(mean, min, max), contains("Sepal"))
+* n(), n_distinct: number of rows, number of distinct rows, and data of all rows, respectively.
+  * flights %>% group_by(UniqueCarrier) %>%
+      summarise(flight_count = n(), dest_count = n_distinct(Dest)) %>%
+      arrange(desc(flight_count))
+* tally: shorthand for summarise(n())
+  * flights %>% group_by(Month, DayofMonth) %>% tally(sort=TRUE)
+count(var1, ): shorthand for group_by(var1, ...) %>% tally()
+  * wt: optional argument for weighted tally (i.e. sum over the wt row)
+
+Window Functions
+________________
+* Window functions are operations internal to a given column, but are n->n where n is the number of rows
+  * include min_rank, lead, lag, cummean
+  * e.g. flights %>% group_by(UniqueCarrier) %>% select(Month, DayofMonth, DepDelay) %>%
+      filter(min_rank(desc(DepDelay)) <= 2) %>% arrange(UniqueCarrier, desc(DepDelay))
+  * e.g. flights %>% group_by(Month) %>% tally() %>% mutate(change = n - lag(n)) # month-to-month change in flights
+* top_n(x, n, col): return top n of col (useful with, e.g., group_by):
+  * flights %>% group_by(UniqueCarrier, Month, DayofMonth) %>% select(DepDelay) %>%
+      summarise(meanDelay = mean(DepDelay)) %>% group_by(UniqueCarrier) %>% top_n(5) %>% arrange(UniqueCarrier, desc(meanDelay))
+* e.g. iris %>% mutate(
+
+Joins
+-----
+* inner_join, left_join (right_join and outer_join coming soon!):
+  * left_join(target, c(leftkey1 = rightkey1, ...))

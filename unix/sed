@@ -1,0 +1,57 @@
+OVERVIEW
+========
+sed (prefix) (cmd)/arg1/arg2/(cmd/flag) (/.../p, s/.../g)
+* ANY DELIMITER is allowed (how does that work?  Are all commands exactly one letter?)
+* -r (-E in OSX/FreeBSD) turns on extended regex (+, \(\), etc.)
+* non-recursive: scans input, modifies, picks up where it left off on input
+* -e cmd1 -e cmd2 ...
+* can make sed executable with /bin/sed -f # can use -<otherargs>f, but f must be last
+  * can enter many lines of commands (don't need -e's before each)
+* from shell script, can use sed 's/'"$1"'/&/g' or whatever
+  * "$1" prevents errors if $1 has a space in it
+* ! after a regex reverses a restriction
+* Can group commands with {...}
+  * sed -n '/begin/,/end/ {
+             cmd1
+             cmd2
+             ...
+            }'
+* r command: read file.
+  * So sed '$r <file> ...' <in >out #appends file to end of in, seds all
+* SED is capable of searching for multi-line patterns
+
+Addresses and Ranges
+--------------------
+* specify a line number by entering as prefix (sed '3 ...')
+  * specify a range with <N1>,<N2> #seems you must have both; $ stands for EOF
+  * one or both can be a regex: <N1>,<regex> goes from N1 through whatever line regex is found on
+* match lines with regexes
+  * e.g. sed '/^#/ s/[0-9][0-9]*//' to delete first number on all lines starting with a #
+
+The s Command
+=============
+* substitute arg1(regex) with arg2 (literal)
+* only first match per line
+  * g flag substitutes every match
+
+arg1
+----
+regular expression
+wrap part in \(...\) (or, in extended regex, (...)) to remember (reference in arg2 as \1...\9)
+  * Can reference match in matching expression
+    * e.g. sed -E 's/([A-Za-z]+) \1/\1/g  #eliminates duplicate words
+
+arg2
+____
+* replacement
+* & stands in for "the matched string" (like {} in find --exec)
+* 
+
+Final Flag
+----------
+* /g indicates global (every match of the line)
+* /<N> where <N> is a number indicates "The Nth match"
+* /p prints changed lines (and -n masks the standard output of "all lines")
+* /w <filename> writes to <filename> (must be last flag)
+
+

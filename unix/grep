@@ -1,0 +1,20 @@
+BASICS
+======
+grep -[opts] [pattern] [loc1 loc2 ...]
+
+* reads from standard input if no loc arguments are provided
+
+OPTIONS
+=======
+* -i: ignore case of pattern
+* -H: always print filenames with output lines (so xargs grep -H can work as a filter)
+* -A [num], -B [num]: print [num] lines of after and before context for each match
+* -v: exclude any lines that match the pattern
+* -c: count lines
+
+NOTES
+-----
+If you want to find a string that starts with a hyphen, use:
+  * grep '[-]...' file
+This passes [-]... to grep without shell expansion, and grep sees that as a regex
+

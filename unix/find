@@ -1,0 +1,52 @@
+OVERVIEW
+========
+find is useful for recursing through directory trees, and aids application of commands
+to objects in a directory tree in a more nuanced fashion.
+
+find dir1 dir2 ... dirN -opt1 ... -opt2 ... ....
+
+OPTIONS
+-------
+  * -print: print to stdout
+  * -print0: print to stdout with nul-termination
+    * useful for avoiding some filename errors:
+      * find . -type f -print0 | xargs -0 ls -l #would fail if there are \'s in filenames
+  * -ls like ls but recurses through subdirectories)
+    * Note: for more output control, find . -print | xargs ls -[options]
+  * -maxdepth, -mindepth: number of directories to recurse through
+  * -name (only matching named files are returned)
+    * Accepts special characters and regular expressions
+    * Must pass special chars in single quotes so bash doesn't expand them (e.g. find -name '*.c')
+  * -type (only matching type files are returned
+    * d: directory; f: plain file
+    * p: named pipe file; l: symlink; s:socket
+    * b: block special file; c: character special file (see mknode(8))
+    * use `find -type f -print | xargs ls -ld` to recursively list files (without directories in output)
+  * -newer [file]: returns results that were more recently modified than the specified file
+  * -size [+/- [number]{cKMGTP}]:
+    * only return files within specified size range
+    * + means "more than", - means "less than"
+    * the suffixes indicate bytes, KB, MB, ...
+  * -mtime [+/- [number]{smhdw}]:
+    * only return files modified in specified time range
+    * suffixes indicate seconds, minutes, hours, days, weeks
+    * similar -atime option for most recent access rather than modified time
+  * -perm:
+    * find files with specified permission
+    * to find blocks of permission, use -:
+      * e.g. -perm -100 finds all --x------ permissioned files
+  * -user, -group:
+    find files belonging to particular user or group
+  * -exec: execute command on each thing returned.  NOTE: often easier to use find | xargs
+    -exec cmd {} \;:
+    * {} is anonymous variable for what find has returned
+    * \; is used to tell find that the command has ended
+    * multiple commands with -exec
+    * -ok is like exec, but forces user to approve each command
+  * !: before an option, returns its inverse
+  * -delete: delete all found files.  USE WITH EXTREME CAUTION
+
+Fast find: make a cron job to updatedb and set FCODES variable to be /usr/lib/find/find.codes?  check grymoire
+
+  
+

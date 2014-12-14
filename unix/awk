@@ -1,0 +1,123 @@
+CALLING SYNTAX
+==============
+awk -F'[sep]' -v [var=value] ['[prog]' | -f progfile] [file1 ...]
+
+* var=value can also be specified (without -v) immediately after prog/progfile
+* reads from stdin if no file is specified
+* any script starting with !#/bin/awk -f is an awk script
+* sep can be a regular expression
+
+A Note on Calling from the Shell
+--------------------------------
+If you want to pass a shell variable to awk, do the following:
+    var=3
+    awk '{print $'$var'}' file
+    # Or, for var passed from first arg of shell command
+    awk '{print $'${1:-1}'}' # This sets default column to 1 if none is specified
+The above works because shell treats quotes as a toggle saying "interpretation mode on/off"
+As further example, see echo 'asdf''qwer'
+
+Also, for fancier awk-calling, check other environment variables
+
+PROGRAM SYNTAX
+==============
+$ dereferences a variable to select the column number specified
+{} encloses expressions.  Must be used to start a code block.
+BEGIN {} {} END {}
+$N is the Nth column; $0 is the whole row
+Can print to a file by using print/printf >[>] "/some/file"
+No user-defined functions (but yes in NAWK, GAWK, Perl)
+  * in NAWK, GAWK: function funcname (argname ...) {...}
+
+OPERATIONS
+----------
+Arithmetic:
+  * +,-,/,*,%
+  * +=,-=,/=,*=,%=
+  * ++,-- Autoincrement, autodecrement (note: --x sets x=x-1 and returns x; x-- returns x and sets x=x-1)
+  * -x: additive inverse of x
+Concatenation:<space>
+  * So can write, e.g., x = 2*2+3 4, which sets x to "74"
+Boolean operators:
+  * Conditionals:
+    * ==,!=,>,>=,<,<=
+      * if comparing strings, lower case letters are less than upper case letters (C-like)
+  * Regular expression matching:
+    * ~ /regex/
+  * &&,||,!
+
+COMMANDS
+--------
+* if, while, for:
+  * if (conditional) {
+      expr;
+    } else {
+      elseexpr;
+    }
+  * i=1;
+    while(i<=10) {
+      print $(i++)
+    }
+  * for (i=1; i<=10; i++) {
+      print $i
+      # break and continue work in for/while
+    }
+  * for (item in array) {}
+* maths:
+  * sin, cos, exp, log, sqrt, atan2, rand, srand
+  * int (integer coercian)
+* string functions:
+  * length(str)
+  * index(str, substr): returns 0 if none found, or index of substr in string
+  * substr(str, position, length=1)
+  * split(str, array, search): splits str into array with search as the splitter; returns number of pieces
+  * tolower, toupper (gawk)
+  * sub, match (regex matching), gsub (nawk)
+* exit, next (latter gets new line, returns to beginning of {})
+* system(): system calls
+* systime(): for timing functions
+* strftime(): for accessing date/time/whatever
+* getline: like next, but keeps executing rest of {}
+
+Special Variables
+-----------------
+OFS: "output field separator"--set in begin; sets output field separator
+  * Note {print $1,$2} prints two fields; {print $1 $2} concatenates the two and prints them as one
+FS: "field separator"--(usually) set in begin; same as -F (sets input field separator)
+  * Must use for a unix utility (i.e. when writing an awk script to call from shell)
+  * Also good for including spaces in sep (e.g. FS="| "
+  * Can be regex
+  * Can be redefined in main loop; if set before any $ accesses, it is set before reading the line;
+    otherwise, the line is read and then FS is set
+NF: "number of fields"--total number of columns
+  * reference last column with $NF; second-to-last with $(NF-1); etc.
+NR: "number of records"--line number (0 at BEGIN, nrow at END, N on line N)
+  * useful for only dealing with certain lines
+RS: "record separator"--defaults to \n.
+  * RS=""; FS="\n"; #reads whole file into memory, treats each line as a field
+ORS: "output record separator"--defaults to \n
+FILENAME: name of file being read
+
+Types
+-----
+* String, integer, decimal
+* Arrays (all arrays in awk are associative (e.g. hash) arrays)
+  * {arr1[$1]++}: declares, initializes array and increments arr1[$1]
+    * (Note: it is good practice to initialize an array with arr1[""]=0)
+  * multi-dimensionality through concatenation: arr1[$1 "," $2]
+  * No control over output order, though--so use sort on output
+
+Flow Control
+------------
+* exit: immediately exit script
+* next: skip current input line and move to next one
+
+Best Practices
+--------------
+* Initialize arrays with arr[""]=0
+* Make sure inputs are expected format (e.g. if(NF > 10) {...}, etc.)
+* Assign variables to input fields at the beginning (so if fields change, you don't have to change a bunch of $2's or whatever)
+
+THOUGHTS:
+  * It could be possible, with many consumer files, to make a score of the likelihood that a person's various data have changed.
+

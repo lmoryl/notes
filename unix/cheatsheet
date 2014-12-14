@@ -1,0 +1,10 @@
+sort -u FNAME: sort a document and return unique rows
+sed '50q;d' FNAME: print 50th line of file
+sort -n -t'|' -k3 FNAME | head -10: sort psv by third column and print top 10 (use -r for decreasing)
+
+(for complex CSVs that span multiple lines, try csvkit?)
+
+ctrl-a: jump to beginning of command line
+ctrl-e: jump to end of command line
+
+
